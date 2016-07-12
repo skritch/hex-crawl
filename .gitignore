@@ -1,0 +1,26 @@
+# Custom
+/tslint.json
+
+# Ignore Visual Studio  Project #
+###################
+*.user
+*.gpState
+*.suo
+bin
+obj
+/packages
+/.vscode
+
+# Ignore Node & Bower
+###################
+node_modules
+bower_components
+build
+.tmp
+**/*.map
+**/*.js
+
+# Ignore Test reporters
+###################
+**/test/coverage
+report
