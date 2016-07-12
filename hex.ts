@@ -1,4 +1,30 @@
 
+/**
+ * Basic collections for Hexes: a HexArray and a HexMap, each a HexCollection of something that 
+ * extends Tile. (Later: import Tile.)
+ * The coordinates of a Hex are (q, r), which canonically run east and southeast on a hex grid
+ * with straight sides running north-south.
+ * For HexBoard, which combines a HexCollection with a spatial coordinate system:
+ *     hexSize is the width between vertical edges.
+ *     hexHeight is the distance between vertices.
+ *            
+ *         .-'-.          ^ hexHeight = (2/sqrt(3)) * hexSize
+ *    _--'       '--_     |
+ *   |               |    | ^ size length = hexHeight / 2 = (1/sqrt(3)) * hexSize
+ *   |<------------->|    | |
+ *   |    hexSize    | ^  | |
+ *   |               | |  | v
+ *   '-.           .-' |  |   ^ = hexHeight / 4 = (1/ 2sqrt(3)) * hexSize
+ *       '--_ _--'     |  v   v
+ *           |         |
+ *           |         v center vertical separation = 1.5 * hexHeight = (sqrt(3)/4) * hexSize
+ *           |
+ *           |
+ *         .-'-. 
+ *    _--'       '--_
+ *   |               |
+ */
+
 export class Hex {
     public static Units: Hex[] = [
         new Hex(1, 0), // E
@@ -57,9 +83,10 @@ export enum Dir {
     NE = 5
 }
 
-/** Could do:
- *      type DirType = Dir | number | "E" | "SE" | "SW" | "W" | "NW" | "NE"
- *  to be more descriptive in other signatures.
+/**
+ * Could do:
+ *     type DirType = Dir | number | "E" | "SE" | "SW" | "W" | "NW" | "NE"
+ * to be more descriptive in other signatures.
  */
 
 /** Base class for Tile objects that store information in a hexMap. */
@@ -85,16 +112,24 @@ abstract class HexCollection<T extends Tile> {
     }
 }
 
-export class HexGrid<T extends Tile> extends HexCollection<T> {
+export class HexArray<T extends Tile> extends HexCollection<T> {
     public qMax: number;
     public rMax: number;
     private grid: Array<Array<T>>;
 
-    constructor(qMax: number, rMax: number) {
+    constructor(qMax: number, rMax: number, fill?: T) {
         super();
         this.qMax = qMax;
         this.rMax = rMax;
-        this.grid = new Array<T>(qMax).map(() => new Array<T>(rMax));
+        if (fill === undefined) {
+            this.grid = new Array<T>(qMax).map(() => new Array<T>(rMax));
+        } else {
+            this.grid = new Array<T>(qMax).map(
+                () => new Array<T>(rMax).map(
+                    () => fill
+                )
+            );
+        }
     }
 
     /** Get the tile at hex h, or get the tiles at Hex[] h.
@@ -122,6 +157,9 @@ export class HexGrid<T extends Tile> extends HexCollection<T> {
 
 }
 
+
+const ROOT3 = 1.73205;  // sqrt(3)
+
 /** Hashmap-style {hex: tile} store. Relies on Hex's toString() for (q, r) <=> key bijection. */
 export class HexMap<T extends Tile> extends HexCollection<T> {
     private store: {[index: string]: Tile};
@@ -143,6 +181,18 @@ export class HexMap<T extends Tile> extends HexCollection<T> {
 
     public set(h, t) {
         this.store[h] = t;
+    }
+}
+
+export class HexBoard<T extends Tile> {
+    public collection: HexCollection<T>;
+    public hexSize: number;
+    public hexHeight: number;
+
+    constructor(hexCollection, hexSize) {
+        this.collection = hexCollection;
+        this.hexSize = hexSize; // width between flat sides
+        this.hexHeight = (1 / ROOT3) * hexSize;
     }
 }
 
